@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:step_progress_bar/step_progress_bar.dart';
 
+import 'circle_demo_page.dart';
+import 'demo_page.dart';
+import 'vertical_demo_page.dart';
+
 void main() => runApp(const ExampleApp());
 
 class ExampleApp extends StatelessWidget {
@@ -55,54 +59,63 @@ class _DemoHomeState extends State<DemoHome> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Demo page button ────────────────────────────────────────
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DemoPage()),
+                ),
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('Demo'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C63FF),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
 
-            // ── Segmented page demo button ────────────────────────────
-            GestureDetector(
+            const SizedBox(height: 20),
+
+            // ── Per-style full-page live demos ────────────────────────
+            _LiveDemoCard(
+              icon: Icons.radio_button_checked_rounded,
+              title: 'Circle Bar — Live Demo',
+              subtitle: 'Account creation flow with circle steps',
+              colors: const [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CircleDemoPage()),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            _LiveDemoCard(
+              icon: Icons.view_stream_rounded,
+              title: 'Segmented Bar — Live Demo',
+              subtitle: 'Multi-step wizard with segmented progress',
+              colors: const [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const _SegmentedPage()),
               ),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6C63FF).withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.view_stream_rounded,
-                        color: Colors.white, size: 28),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Segmented Bar — Live Demo',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15)),
-                          SizedBox(height: 2),
-                          Text('Multi-step wizard with segmented progress',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios,
-                        color: Colors.white70, size: 16),
-                  ],
-                ),
+            ),
+
+            const SizedBox(height: 12),
+
+            _LiveDemoCard(
+              icon: Icons.timeline_rounded,
+              title: 'Vertical Bar — Live Demo',
+              subtitle: 'Order tracking with vertical steps',
+              colors: const [Color(0xFF009688), Color(0xFF4DD4C4)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VerticalDemoPage()),
               ),
             ),
 
@@ -117,7 +130,7 @@ class _DemoHomeState extends State<DemoHome> {
                     child: StepProgressBar(
                       totalSteps: 4,
                       currentStep: _currentStep,
-                        ),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -141,8 +154,7 @@ class _DemoHomeState extends State<DemoHome> {
                   const SizedBox(height: 8),
                   Text(
                     _stepLabel(4),
-                    style: TextStyle(
-                        color: Colors.grey.shade600, fontSize: 13),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                   ),
                 ],
               ),
@@ -219,7 +231,7 @@ class _DemoHomeState extends State<DemoHome> {
                     child: StepProgressBar(
                       totalSteps: 4,
                       currentStep: _currentStep,
-                          labels: const ['Cart', 'Address', 'Payment', 'Done'],
+                      labels: const ['Cart', 'Address', 'Payment', 'Done'],
                       onStepTapped: (index) => setState(() {
                         _currentStep = index + 1;
                         _lastTapped = index;
@@ -231,8 +243,7 @@ class _DemoHomeState extends State<DemoHome> {
                     _lastTapped == null
                         ? 'Tap any step to jump to it'
                         : 'Tapped step ${_lastTapped! + 1}',
-                    style: TextStyle(
-                        color: Colors.grey.shade500, fontSize: 12),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ],
               ),
@@ -249,8 +260,9 @@ class _DemoHomeState extends State<DemoHome> {
                     child: StepProgressBar(
                       totalSteps: 4,
                       currentStep: _currentStep,
-                      theme: const StepProgressBarTheme()
-                          .copyWith(connectorLength: _connectorLength),
+                      theme: const StepProgressBarTheme().copyWith(
+                        connectorLength: _connectorLength,
+                      ),
                       labels: const ['Cart', 'Address', 'Payment', 'Done'],
                     ),
                   ),
@@ -260,8 +272,7 @@ class _DemoHomeState extends State<DemoHome> {
                     max: 120,
                     divisions: 22,
                     label: '${_connectorLength.round()}px',
-                    onChanged: (v) =>
-                        setState(() => _connectorLength = v),
+                    onChanged: (v) => setState(() => _connectorLength = v),
                   ),
                 ],
               ),
@@ -290,10 +301,27 @@ class _DemoHomeState extends State<DemoHome> {
                     max: 12,
                     divisions: 11,
                     label: '${_lineThickness.round()}px',
-                    onChanged: (v) =>
-                        setState(() => _lineThickness = v),
+                    onChanged: (v) => setState(() => _lineThickness = v),
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── High thickness, no spacing ────────────────────────────
+            _SectionCard(
+              title: 'Connector Thickness High  (connectorSpacing: 0)',
+              child: _HScroll(
+                child: StepProgressBar(
+                  totalSteps: 4,
+                  currentStep: _currentStep,
+                  theme: const StepProgressBarTheme(
+                    lineThickness: 20,
+                    connectorSpacing: 0,
+                  ),
+                  labels: const ['Cart', 'Address', 'Payment', 'Done'],
+                ),
               ),
             ),
 
@@ -399,10 +427,13 @@ class _DemoHomeState extends State<DemoHome> {
                       color: Color(0xFF6C63FF),
                       fontStyle: FontStyle.italic,
                     ),
-                    completedLabelStyle:
-                        const TextStyle(decoration: TextDecoration.lineThrough),
-                    inactiveLabelStyle:
-                        const TextStyle(color: Colors.grey, fontSize: 9),
+                    completedLabelStyle: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                    inactiveLabelStyle: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 9,
+                    ),
                   ),
                   labels: const ['Cart', 'Address', 'Payment', 'Done'],
                 ),
@@ -512,8 +543,11 @@ class _DemoHomeState extends State<DemoHome> {
                       ),
                       child: Center(
                         child: state == StepStatus.completed
-                            ? const Icon(Icons.check,
-                                color: Colors.white, size: 18)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              )
                             : Text(
                                 '${index + 1}',
                                 style: TextStyle(
@@ -546,8 +580,78 @@ class _HScroll extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      clipBehavior: Clip.none,
-      child: child,
+      child: Padding(padding: const EdgeInsets.all(10), child: child),
+    );
+  }
+}
+
+// ── Live demo launch card ───────────────────────────────────────────────────
+
+class _LiveDemoCard extends StatelessWidget {
+  const _LiveDemoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.colors,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> colors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -606,9 +710,10 @@ class _SegmentedPageState extends State<_SegmentedPage> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(step.title,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600)),
+        title: Text(
+          step.title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -641,13 +746,18 @@ class _SegmentedPageState extends State<_SegmentedPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Text('Step $_step of $_total',
-                      style: TextStyle(
-                          color: Colors.grey.shade500, fontSize: 12)),
+                  Text(
+                    'Step $_step of $_total',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
                   const SizedBox(height: 8),
-                  Text(step.subtitle,
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    step.subtitle,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   Center(
                     child: Container(
@@ -657,8 +767,11 @@ class _SegmentedPageState extends State<_SegmentedPage> {
                         color: const Color(0xFFF0EEFF),
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Icon(step.icon,
-                          size: 40, color: const Color(0xFF6C63FF)),
+                      child: Icon(
+                        step.icon,
+                        size: 40,
+                        color: const Color(0xFF6C63FF),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -691,7 +804,8 @@ class _SegmentedPageState extends State<_SegmentedPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Color(0xFF6C63FF)),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Back'),
                     ),
@@ -706,7 +820,8 @@ class _SegmentedPageState extends State<_SegmentedPage> {
                       backgroundColor: const Color(0xFF6C63FF),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: Text(_step < _total ? 'Continue' : 'Submit'),
                   ),
@@ -737,10 +852,13 @@ class _SegmentedPageState extends State<_SegmentedPage> {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Expanded(child: _Field(label: 'State', hint: 'NY')),
+              const Expanded(
+                child: _Field(label: 'State', hint: 'NY'),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                  child: _Field(label: 'ZIP Code', hint: '10001')),
+                child: _Field(label: 'ZIP Code', hint: '10001'),
+              ),
             ],
           ),
         ];
@@ -757,8 +875,7 @@ class _SegmentedPageState extends State<_SegmentedPage> {
           const SizedBox(height: 12),
           _UploadTile(label: 'Address Proof', icon: Icons.home_outlined),
           const SizedBox(height: 12),
-          _UploadTile(
-              label: 'Photograph', icon: Icons.camera_alt_outlined),
+          _UploadTile(label: 'Photograph', icon: Icons.camera_alt_outlined),
         ];
       case 5:
         return [
@@ -788,8 +905,7 @@ class _Field extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Color(0xFF6C63FF), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
         ),
       ),
     );
@@ -831,8 +947,9 @@ class _UploadTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
-            style: BorderStyle.solid),
+          color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+          style: BorderStyle.solid,
+        ),
         borderRadius: BorderRadius.circular(12),
         color: const Color(0xFFF8F7FF),
       ),
@@ -841,11 +958,12 @@ class _UploadTile extends StatelessWidget {
           Icon(icon, color: const Color(0xFF6C63FF)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label,
-                style: const TextStyle(fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
-          const Icon(Icons.upload_outlined,
-              color: Color(0xFF6C63FF), size: 20),
+          const Icon(Icons.upload_outlined, color: Color(0xFF6C63FF), size: 20),
         ],
       ),
     );
@@ -864,13 +982,15 @@ class _ReviewRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    color: Colors.grey.shade500, fontSize: 13)),
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            ),
           ),
-          Text(value,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ],
       ),
     );

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 enum StepStatus { completed, active, inactive }
@@ -347,20 +349,43 @@ class StepProgressBar extends StatelessWidget {
         : (theme.inactiveLineColor ?? theme.inactiveColor);
 
     final spacing = theme.connectorSpacing;
+    final radius = theme.stepSize / 2;
+    final halfThickness = theme.lineThickness / 2;
+    // A flat-edged connector only truly touches a circular step at its
+    // exact center; its corners fall just short of the circle's curve
+    // otherwise. Rather than shifting the whole bar sideways (which
+    // over-corrects at the center and bites a flat notch into the
+    // circle), the connector's own end caps are drawn as arcs that trace
+    // the circle's curve exactly, so the join is seamless at any
+    // thickness. Skipped when spacing is explicit (gap is intentional)
+    // or the line is as thick as the step (no room left to curve into).
+    final curved = spacing == 0 && halfThickness < radius;
+    final theta = curved ? math.asin(halfThickness / radius) : 0.0;
+    final inset = curved ? radius - radius * math.cos(theta) : 0.0;
 
     if (axis == Axis.horizontal) {
       final length = theme.connectorLength ?? (bounded ? null : 48.0);
+      final bar = curved
+          ? Positioned(
+              left: -inset,
+              right: -inset,
+              top: 0,
+              bottom: 0,
+              child: CustomPaint(
+                painter: _HConnectorPainter(color: color, radius: radius),
+              ),
+            )
+          : Positioned.fill(child: ColoredBox(color: color));
       final inner = SizedBox(
         height: theme.stepSize,
         width: length,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: spacing),
           child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: double.infinity,
+            child: SizedBox(
               height: theme.lineThickness,
-              color: color,
+              width: double.infinity,
+              child: Stack(clipBehavior: Clip.none, children: [bar]),
             ),
           ),
         ),
@@ -368,17 +393,27 @@ class StepProgressBar extends StatelessWidget {
       return (length == null && bounded) ? Expanded(child: inner) : inner;
     } else {
       final length = theme.connectorLength ?? 40.0;
+      final bar = curved
+          ? Positioned(
+              top: -inset,
+              bottom: -inset,
+              left: 0,
+              right: 0,
+              child: CustomPaint(
+                painter: _VConnectorPainter(color: color, radius: radius),
+              ),
+            )
+          : Positioned.fill(child: ColoredBox(color: color));
       return SizedBox(
         width: theme.stepSize,
         height: length,
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: spacing),
           child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+            child: SizedBox(
               width: theme.lineThickness,
               height: double.infinity,
-              color: color,
+              child: Stack(clipBehavior: Clip.none, children: [bar]),
             ),
           ),
         ),
@@ -386,7 +421,23 @@ class StepProgressBar extends StatelessWidget {
     }
   }
 
-  Widget _buildStep(int stepIndex) {
+  double _measureLabelHeight(
+    BuildContext context, {
+    required String text,
+    required TextStyle style,
+    required double maxWidth,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textAlign: TextAlign.center,
+      textDirection: Directionality.of(context),
+      maxLines: 2,
+      textScaler: MediaQuery.maybeTextScalerOf(context) ?? TextScaler.noScaling,
+    )..layout(maxWidth: maxWidth);
+    return painter.height;
+  }
+
+  Widget _buildStep(int stepIndex, BuildContext context) {
     final state = _stateFor(stepIndex);
     final fillColor = _circleColor(stepIndex, state);
     final borderColor = _borderColor(state);
@@ -425,12 +476,37 @@ class StepProgressBar extends StatelessWidget {
     );
 
     if (axis == Axis.horizontal) {
+      const labelWidth = 16.0;
+      final labelHeight = _measureLabelHeight(
+        context,
+        text: labels![stepIndex],
+        style: _labelStyle(state),
+        maxWidth: theme.stepSize + labelWidth,
+      );
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           circle,
           const SizedBox(height: 6),
-          SizedBox(width: theme.stepSize + 16, child: labelWidget),
+          // The label is wider than the circle, but its box is pinned to
+          // the circle's own width (via Positioned overflow below) so a
+          // label never shifts the circle — or the connector it touches —
+          // out of alignment with unlabeled steps.
+          SizedBox(
+            width: theme.stepSize,
+            height: labelHeight,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: -labelWidth / 2,
+                  right: -labelWidth / 2,
+                  top: 0,
+                  child: labelWidget,
+                ),
+              ],
+            ),
+          ),
         ],
       );
     } else {
@@ -462,7 +538,7 @@ class StepProgressBar extends StatelessWidget {
           totalSteps * 2 - 1,
           (i) => i.isOdd
               ? _buildConnector(i ~/ 2, bounded: bounded)
-              : _buildStep(i ~/ 2),
+              : _buildStep(i ~/ 2, context),
         );
 
         if (axis == Axis.horizontal) {
@@ -479,6 +555,100 @@ class StepProgressBar extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+// ── Connector end-cap painters ──────────────────────────────────────────────
+//
+// A flat-edged connector only truly touches a circular step at its exact
+// center; its corners fall just short of the circle's curve otherwise.
+// These painters trace the connector's end caps as arcs that exactly
+// follow the neighboring circles' own curvature (same radius), so the
+// join is seamless — no gap, and no overlap biting into the circle.
+
+class _HConnectorPainter extends CustomPainter {
+  const _HConnectorPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final thickness = size.height;
+    final halfThickness = thickness / 2;
+    final width = size.width;
+
+    if (radius <= 0 || halfThickness >= radius) {
+      canvas.drawRect(Offset.zero & size, paint);
+      return;
+    }
+
+    final theta = math.asin((halfThickness / radius).clamp(-1.0, 1.0));
+    final inset = radius - radius * math.cos(theta);
+
+    final centerA = Offset(inset - radius, halfThickness);
+    final centerB = Offset(width - inset + radius, halfThickness);
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..arcTo(Rect.fromCircle(center: centerA, radius: radius), -theta,
+          2 * theta, false)
+      ..lineTo(width, thickness)
+      ..arcTo(Rect.fromCircle(center: centerB, radius: radius),
+          math.pi - theta, 2 * theta, false)
+      ..lineTo(0, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HConnectorPainter oldDelegate) {
+    return color != oldDelegate.color || radius != oldDelegate.radius;
+  }
+}
+
+class _VConnectorPainter extends CustomPainter {
+  const _VConnectorPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final thickness = size.width;
+    final halfThickness = thickness / 2;
+    final length = size.height;
+
+    if (radius <= 0 || halfThickness >= radius) {
+      canvas.drawRect(Offset.zero & size, paint);
+      return;
+    }
+
+    final theta = math.asin((halfThickness / radius).clamp(-1.0, 1.0));
+    final inset = radius - radius * math.cos(theta);
+
+    final centerA = Offset(halfThickness, inset - radius);
+    final centerB = Offset(halfThickness, length - inset + radius);
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..arcTo(Rect.fromCircle(center: centerA, radius: radius),
+          math.pi / 2 + theta, -2 * theta, false)
+      ..lineTo(thickness, length)
+      ..arcTo(Rect.fromCircle(center: centerB, radius: radius),
+          -math.pi / 2 + theta, -2 * theta, false)
+      ..lineTo(0, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _VConnectorPainter oldDelegate) {
+    return color != oldDelegate.color || radius != oldDelegate.radius;
   }
 }
 
