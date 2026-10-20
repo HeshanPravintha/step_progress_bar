@@ -1,0 +1,17 @@
+name: step_progress_bar_example
+description: Example app for the step_progress_bar package.
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.11.4
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  step_progress_bar:
+    path: ../
+
+flutter:
+  uses-material-design: true
