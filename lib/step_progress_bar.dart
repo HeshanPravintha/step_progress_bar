@@ -360,10 +360,7 @@ class StepProgressBar extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               width: double.infinity,
               height: theme.lineThickness,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(theme.lineThickness),
-                color: color,
-              ),
+              color: color,
             ),
           ),
         ),
@@ -381,10 +378,7 @@ class StepProgressBar extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               width: theme.lineThickness,
               height: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(theme.lineThickness),
-                color: color,
-              ),
+              color: color,
             ),
           ),
         ),

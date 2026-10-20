@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:step_progress_bar/step_progress_bar.dart';
 
 void main() => runApp(const ExampleApp());
@@ -31,6 +31,7 @@ class _DemoHomeState extends State<DemoHome> {
   int _currentStep = 1;
   int? _lastTapped;
   double _connectorLength = 48;
+  double _lineThickness = 3;
 
   String _stepLabel(int totalSteps) {
     if (_currentStep == 0) return 'Not started';
@@ -163,7 +164,7 @@ class _DemoHomeState extends State<DemoHome> {
             const SizedBox(height: 12),
 
             _SectionCard(
-              title: 'Separated  (connectorSpacing: 8)',
+              title: 'Separated  (connectorSpacing: 20)',
               child: _HScroll(
                 child: StepProgressBar(
                   totalSteps: 4,
@@ -263,6 +264,55 @@ class _DemoHomeState extends State<DemoHome> {
                         setState(() => _connectorLength = v),
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Connector thickness slider ────────────────────────────
+            _SectionCard(
+              title: 'Connector Thickness  (${_lineThickness.round()}px)',
+              child: Column(
+                children: [
+                  _HScroll(
+                    child: StepProgressBar(
+                      totalSteps: 4,
+                      currentStep: _currentStep,
+                      theme: StepProgressBarTheme(
+                        lineThickness: _lineThickness,
+                      ),
+                      labels: const ['Cart', 'Address', 'Payment', 'Done'],
+                    ),
+                  ),
+                  Slider(
+                    value: _lineThickness,
+                    min: 1,
+                    max: 12,
+                    divisions: 11,
+                    label: '${_lineThickness.round()}px',
+                    onChanged: (v) =>
+                        setState(() => _lineThickness = v),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Custom connector colors ───────────────────────────────
+            _SectionCard(
+              title: 'Custom Connector Colors',
+              child: _HScroll(
+                child: StepProgressBar(
+                  totalSteps: 4,
+                  currentStep: _currentStep,
+                  theme: const StepProgressBarTheme(
+                    activeLineColor: Colors.green,
+                    inactiveLineColor: Color(0xFFFFD7D7),
+                    lineThickness: 4,
+                  ),
+                  labels: const ['Cart', 'Address', 'Payment', 'Done'],
+                ),
               ),
             ),
 
@@ -496,6 +546,7 @@ class _HScroll extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
       child: child,
     );
   }
